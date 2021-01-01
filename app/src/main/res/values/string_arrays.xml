@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="category">
+        <item>ဝိနယပိဋက</item>
+        <item>ဒီဃနိကာယ</item>
+        <item>မဇ္ဈိမနိကာယ</item>
+        <item>သံယုတ္တနိကာယ</item>
+        <item>အင်္ဂုတ္တရနိကာယ</item>
+        <item>ခုဒ္ဒကနိကာယ</item>
+        <item>အဘိဓမ္မပိဋက</item>
+    </string-array>
+</resources>
