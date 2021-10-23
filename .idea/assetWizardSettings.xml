@@ -154,7 +154,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/action/ic_info_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/Applications/Android%20Studio.app/Contents/plugins/android/lib/android.jar!/images/material/icons/materialicons/nights_stay/baseline_nights_stay_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -165,8 +165,8 @@
                         <option name="values">
                           <map>
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="scrollbar_vertical_track" />
-                            <entry key="sourceFile" value="C:\Users\pndaza" />
+                            <entry key="outputName" value="ic_baseline_nights_stay_24" />
+                            <entry key="sourceFile" value="/C:\Users\pndaza" />
                           </map>
                         </option>
                       </PersistentState>

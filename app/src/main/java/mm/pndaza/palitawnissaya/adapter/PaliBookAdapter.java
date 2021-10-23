@@ -10,6 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import mm.pndaza.palitawnissaya.R;
+import mm.pndaza.palitawnissaya.model.Category;
 import mm.pndaza.palitawnissaya.model.PaliBook;
 import mm.pndaza.palitawnissaya.utils.MDetect;
 
@@ -30,7 +31,7 @@ public class PaliBookAdapter extends BaseAdapter {
     @Override
     public int getItemViewType(int position) {
         // id of header is added as empty string
-        if (list.get(position) instanceof String){
+        if (list.get(position) instanceof Category){
             return HEADER;
         } else {
             return BOOK;
@@ -76,12 +77,16 @@ public class PaliBookAdapter extends BaseAdapter {
             case HEADER:
                 TextView tvHeader = convertView.findViewById(R.id.tv_list_item);
                 // display as zawgyi
-                tvHeader.setText(MDetect.getDeviceEncodedText((String)list.get(position)));
+                final Category category = (Category)list.get(position);
+                final String categoryName = MDetect.getDeviceEncodedText(category.getName());
+                tvHeader.setText(categoryName);
                 break;
             case BOOK:
                 TextView tvBook = convertView.findViewById(R.id.tv_list_item);
                 // display as zawgyi
-                tvBook.setText(MDetect.getDeviceEncodedText(((PaliBook)list.get(position)).getName()));
+                final PaliBook paliBook = (PaliBook)list.get(position);
+                final String bookName = MDetect.getDeviceEncodedText(paliBook.getName());
+                tvBook.setText(bookName);
                 break;
         }
 

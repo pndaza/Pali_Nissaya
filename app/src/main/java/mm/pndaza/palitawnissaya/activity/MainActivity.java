@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import mm.pndaza.palitawnissaya.R;
 import mm.pndaza.palitawnissaya.adapter.PaliBookAdapter;
 import mm.pndaza.palitawnissaya.database.DBOpenHelper;
+import mm.pndaza.palitawnissaya.model.Category;
 import mm.pndaza.palitawnissaya.model.PaliBook;
 import mm.pndaza.palitawnissaya.utils.MDetect;
 
@@ -30,10 +31,10 @@ public class MainActivity extends AppCompatActivity {
         setTitle(MDetect.getDeviceEncodedText(title));
 
         ArrayList<Object> paliBookList = new ArrayList<>();
-        String[] categories = getResources().getStringArray(R.array.category);
-        for (int i = 0; i < categories.length; i++) {
-            paliBookList.add(categories[i]);
-            paliBookList.addAll(DBOpenHelper.getInstance(this).getBooks(i));
+        ArrayList<Category> categories = DBOpenHelper.getInstance(this).getCategories();
+        for (Category category : categories) {
+            paliBookList.add(category);
+            paliBookList.addAll(DBOpenHelper.getInstance(this).getBooks(category.getId()));
         }
         PaliBookAdapter adapter = new PaliBookAdapter(this, paliBookList);
         final ListView listView = findViewById(R.id.list_view);

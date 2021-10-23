@@ -4,9 +4,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 
+import mm.pndaza.palitawnissaya.model.Category;
 import mm.pndaza.palitawnissaya.model.Nsy;
 import mm.pndaza.palitawnissaya.model.PaliBook;
 
@@ -14,7 +16,7 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 
     private static DBOpenHelper sInstance;
     private static final String DATABASE_NAME = "pali_nsy.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
 
     public static synchronized DBOpenHelper getInstance(Context context) {
@@ -42,11 +44,28 @@ public class DBOpenHelper extends SQLiteOpenHelper {
 
     }
 
+    public ArrayList<Category> getCategories() {
+        ArrayList<Category> categories = new ArrayList<>();
+        Cursor cursor = getReadableDatabase().query("categories", new String[]{"id", "description"},
+                null, null, null, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                final Category category = new Category(
+                        cursor.getInt(cursor.getColumnIndex("id")),
+                        cursor.getString(cursor.getColumnIndex("description"))
+                );
+                categories.add(category);
+            } while (cursor.moveToNext());
+        }
+        return categories;
+    }
+
     public ArrayList<PaliBook> getBooks(int category) {
         ArrayList<PaliBook> bookList = new ArrayList<>();
 
         Cursor cursor = getReadableDatabase().rawQuery(
-                "SELECT id, name, first_page, last_page FROM palibook where category = " + category, null);
+                "SELECT id, name, first_page, last_page FROM pali_books where category_id = " + category,
+                null);
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
@@ -62,20 +81,22 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         return bookList;
     }
 
-    public ArrayList<Nsy> getNsyBooks(String bookid, int pageNumber) {
+    public ArrayList<Nsy> getNsyBooks(String pali_book_id, int pali_book_page_number) {
 
         ArrayList<Nsy> list = new ArrayList<>();
 
         Cursor cursor = getReadableDatabase().rawQuery(
-                "SELECT nsyid, nsypagenumber, name FROM pagematch INNER JOIN nsybook " +
-                        "ON pagematch.nsyid = nsybook.id WHERE bookid = ? AND bookpagenumber = ? AND nsypagenumber != 0",
-                new String[]{bookid, String.valueOf(pageNumber)});
+                "SELECT nsy_book_id, nsy_book_page_number, name "
+                        + "FROM pali_nsy_page_map INNER JOIN nsy_books "
+                        + "ON pali_nsy_page_map.nsy_book_id = nsy_books.id "
+                        + "WHERE pali_book_id = ? AND pali_book_page_number = ? AND nsy_book_page_number != 0",
+                new String[]{pali_book_id, String.valueOf(pali_book_page_number)});
 
         if ((cursor != null) && (cursor.getCount() > 0)) {
             cursor.moveToFirst();
             do {
-                String nsyid = cursor.getString(cursor.getColumnIndex("nsyid"));
-                int nsyPageNumber = cursor.getInt(cursor.getColumnIndex("nsypagenumber"));
+                String nsyid = cursor.getString(cursor.getColumnIndex("nsy_book_id"));
+                int nsyPageNumber = cursor.getInt(cursor.getColumnIndex("nsy_book_page_number"));
                 String nsyName = cursor.getString(cursor.getColumnIndex("name"));
                 list.add(new Nsy(nsyid, nsyName, nsyPageNumber));
             } while (cursor.moveToNext());
@@ -84,12 +105,13 @@ public class DBOpenHelper extends SQLiteOpenHelper {
     }
 
 
-    public boolean isNsyExist(String bookid, int pageNumber) {
+    public boolean isNsyExist(String pali_book_id, int pali_page_number) {
 
         Cursor cursor = getReadableDatabase().rawQuery(
-                "SELECT nsyid FROM pagematch WHERE bookid = ? and bookpagenumber = ?",
-                new String[]{bookid, String.valueOf(pageNumber)});
+                "SELECT nsy_book_id FROM pali_nsy_page_map WHERE pali_book_id = ? and pali_book_page_number = ?",
+                new String[]{pali_book_id, String.valueOf(pali_page_number)});
         if (cursor != null && cursor.getCount() > 0) {
+            Log.d("isExist", "true");
             cursor.close();
             return true;
         }

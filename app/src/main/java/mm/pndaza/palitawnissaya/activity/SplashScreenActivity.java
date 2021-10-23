@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+
 import android.util.Log;
 
 import java.io.File;
@@ -16,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import mm.pndaza.palitawnissaya.R;
+import mm.pndaza.palitawnissaya.utils.SharePref;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
@@ -23,13 +26,22 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
+        SharePref sharePref = SharePref.getInstance(this);
+        if (sharePref.getNightMode()) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splashscreen);
 
         File file = new File(getFilesDir() + "/databases/" + DATABASE_NAME );
 
-        if (file.exists() == false) {
-            new CopyDB().execute(new File[]{file});
+        if (!file.exists()) {
+//            new CopyDB().execute(new File[]{file});
+            new CopyDB().execute(file);
         }
          else {
             Log.d("onCreate","database exist");
@@ -41,15 +53,10 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private void startMainActivity(){
 
-        new Handler().postDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                // TODO Auto-generated method stub
-                Intent intent = new Intent(SplashScreenActivity.this,MainActivity.class);
-                SplashScreenActivity.this.startActivity(intent);
-                SplashScreenActivity.this.finish();
-            }
+        new Handler().postDelayed(() -> {
+            Intent intent = new Intent(SplashScreenActivity.this,MainActivity.class);
+            SplashScreenActivity.this.startActivity(intent);
+            SplashScreenActivity.this.finish();
         },500);
 
     }
@@ -63,8 +70,9 @@ public class SplashScreenActivity extends AppCompatActivity {
             File file = files[0];
 
             // check databases folder is exist and if not, make folder.
-            if (file.getParentFile().exists() == false){
-                file.getParentFile().mkdirs();
+            if (!file.getParentFile().exists()){
+                final boolean result = file.getParentFile().mkdirs();
+                Log.d("folder creation result", String.valueOf(result));
             }
 
             try {
