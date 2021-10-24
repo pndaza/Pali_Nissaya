@@ -1,7 +1,7 @@
 package mm.pndaza.palitawnissaya.utils;
 
 public enum ScrollMode {
-    vertical, horizental;
+    vertical, horizontal;
 
     public static ScrollMode toScrollMode(String enumString){
         try {
