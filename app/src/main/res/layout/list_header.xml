@@ -8,5 +8,6 @@
     android:layout_margin="8dp"
     android:padding="8dp"
     android:textSize="20sp"
-    android:background="@android:color/darker_gray"
-    android:textColor="@android:color/white"/>
+    android:background="?attr/colorPrimaryVariant"
+    android:textColor="?attr/colorOnPrimary"
+    android:gravity="center_horizontal" />

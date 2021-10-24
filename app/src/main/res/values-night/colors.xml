@@ -7,13 +7,13 @@
     <color name="color_secondary_variant">#FF7043</color>
 
     <color name="color_background">#000000</color>
-    <color name="color_surface">#101010</color>
+    <color name="color_surface">#1f1f1f</color>
     <color name="color_error">#ad1457</color>
 
     <color name="color_on_primary">#ffffff</color>
     <color name="color_on_secondary">#212121</color>
     <color name="color_on_background">#E0E0E0</color>
-    <color name="color_on_surface">#BDBDBD</color>
+    <color name="color_on_surface">#D5D5D5</color>
     <color name="color_on_error">#000000</color>
 
     <color name="color_event_time">@color/color_secondary</color>

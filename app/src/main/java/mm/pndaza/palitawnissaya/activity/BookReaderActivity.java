@@ -57,7 +57,7 @@ public class BookReaderActivity extends AppCompatActivity {
 
         pdfView.fromAsset("books" + File.separator + pdfFileName)
                 .enableSwipe(true) // allows to block changing pages using swipe
-                .swipeHorizontal(false)
+                .swipeHorizontal(scrollMode == ScrollMode.horizental)
                 .defaultPage(nsypage - 1)
                 .scrollHandle(new DefaultScrollHandle(this))
                 .pageFitPolicy(FitPolicy.WIDTH)
@@ -106,7 +106,7 @@ public class BookReaderActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        final int id = item.getItemId();
         switch (id) {
             case R.id.menu_scroll_mode:
                 swapIcon(item);
@@ -173,6 +173,7 @@ public class BookReaderActivity extends AppCompatActivity {
                     .nightMode(nightMode)
                     .load();
             scrollMode = ScrollMode.horizental;
+            sharePref.setScrollMode(scrollMode);
         } else {
             pdfView.fromAsset(assetName)
                     .enableSwipe(true)
@@ -183,6 +184,7 @@ public class BookReaderActivity extends AppCompatActivity {
                     .nightMode(nightMode)
                     .load();
             scrollMode = ScrollMode.vertical;
+            sharePref.setScrollMode(scrollMode);
         }
 
     }
