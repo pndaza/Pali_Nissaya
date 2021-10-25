@@ -147,14 +147,14 @@ public class BookReaderActivity extends AppCompatActivity {
             pdfView.setNightMode(false);
             pdfView.loadPages();
             nightMode = false;
-            sharePref.setNightModeState(false);
+            sharePref.setNightMode(false);
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
             item.getIcon().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP);
             pdfView.setNightMode(true);
             pdfView.loadPages();
             nightMode = true;
-            sharePref.setNightModeState(true);
+            sharePref.setNightMode(true);
         }
     }
 

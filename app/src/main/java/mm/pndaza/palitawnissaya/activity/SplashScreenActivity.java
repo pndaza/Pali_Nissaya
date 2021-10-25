@@ -1,14 +1,14 @@
 package mm.pndaza.palitawnissaya.activity;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,16 +16,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import mm.pndaza.palitawnissaya.R;
+import mm.pndaza.palitawnissaya.data.Constants;
 import mm.pndaza.palitawnissaya.utils.SharePref;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
-    private static final String DATABASE_NAME = "pali_nsy.db";
+//    private static final String DATABASE_PATH = "databases";
+//    private static final String DATABASE_FILENAME = "pali_nsy.db";
+    private String SAVED_PATH;
+//    private Context context;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
+        // call AppCompatDelegate's setDefaultNightMode method before super.onCrete
+        // otherwise it will trow error on some phone
+        // E/ActivityInjector: get life cycle exception
+        // java.lang.ClassCastException: android.os.BinderProxy cannot be cast to
+        // android.app.servertransaction.ClientTransaction
 
         SharePref sharePref = SharePref.getInstance(this);
         if (sharePref.getNightMode()) {
@@ -37,57 +49,76 @@ public class SplashScreenActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splashscreen);
 
-        File file = new File(getFilesDir() + "/databases/" + DATABASE_NAME );
+        SAVED_PATH = getFilesDir().toString()  + File.separator + Constants.DATABASE_PATH ;
+//        context = this;
 
-        if (!file.exists()) {
-//            new CopyDB().execute(new File[]{file});
-            new CopyDB().execute(file);
-        }
-         else {
-            Log.d("onCreate","database exist");
+        File databaseFile = new File(SAVED_PATH , Constants.DATABASE_FILE_NAME);
+
+        boolean isDatabaseCopied = sharePref.isDatabaseCopied();
+        boolean isDatabaseFileExist = databaseFile.exists();
+        int savedDatabaseVersion = sharePref.getDatabaseVersion();
+        int latestDatabaseVersion = Constants.DATABASE_VERSION;
+
+        if (isDatabaseCopied && isDatabaseFileExist) {
+            Log.d("onCreate", "database exist");
+            if(savedDatabaseVersion == latestDatabaseVersion){
             startMainActivity();
+            } else {
+                Log.d("db setup mode", "updating");
+                updateDatabase();
+            }
+        } else {
+            Log.d("db setup mode", "first time");
+            setupDatabase();
         }
 
     }
 
+    private void updateDatabase(){
+        deleteDatabase();
+        setupDatabase();
+    }
 
-    private void startMainActivity(){
+    private void deleteDatabase() {
+        // deleting  temporary files created by sqlite
+        File temp1 = new File(SAVED_PATH, Constants.DATABASE_FILE_NAME + "-shm");
+        if (temp1.exists()) {
+            temp1.delete();
+        }
+        File temp2 = new File(SAVED_PATH, Constants.DATABASE_FILE_NAME  + "-wal");
+        if (temp2.exists()) {
+            temp2.delete();
+        }
 
-        new Handler().postDelayed(() -> {
-            Intent intent = new Intent(SplashScreenActivity.this,MainActivity.class);
-            SplashScreenActivity.this.startActivity(intent);
-            SplashScreenActivity.this.finish();
-        },500);
-
+        new File(SAVED_PATH, Constants.DATABASE_FILE_NAME ).delete();
     }
 
 
-    public class CopyDB extends AsyncTask<File, Double, Void> {
+    private void setupDatabase() {
 
+        File file = new File(SAVED_PATH , Constants.DATABASE_FILE_NAME);
 
-        protected Void doInBackground(File... files) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
 
-            File file = files[0];
-
+        executor.execute(() -> {
+            //Background work here
             // check databases folder is exist and if not, make folder.
-            if (!file.getParentFile().exists()){
+            if (!file.getParentFile().exists()) {
                 final boolean result = file.getParentFile().mkdirs();
                 Log.d("folder creation result", String.valueOf(result));
             }
 
             try {
-                InputStream input = SplashScreenActivity.this.getAssets().open("databases/" + DATABASE_NAME);
+                InputStream input = SplashScreenActivity.this.getAssets().open(
+                        Constants.DATABASE_PATH + File.separator
+                                + Constants.DATABASE_FILE_NAME);
                 OutputStream output = new FileOutputStream(file);
 
-                int bufferSize;
-                final int size = input.available();
-                long alreadyCopy = 0;
 
                 byte[] buffer = new byte[1024];
-                while ((bufferSize = input.read(buffer) ) > 0) {
-                    alreadyCopy += bufferSize;
+                while (input.read(buffer) > 0) {
                     output.write(buffer);
-                    publishProgress(1.0d * alreadyCopy / size );
                 }
                 input.close();
                 output.close();
@@ -100,21 +131,25 @@ public class SplashScreenActivity extends AppCompatActivity {
                 e2.printStackTrace();
             }
 
-            return null;
-        }
+            handler.post(() -> {
+                //UI Thread work here
+                SharePref sharePref = SharePref.getInstance(this);
+                sharePref.isDatabaseCopied(true);
+                sharePref.setDatabaseVersion(Constants.DATABASE_VERSION);
+                startMainActivity();
+            });
+        });
 
+    }
 
-        @Override
-        protected void onPostExecute(Void result) {
+    private void startMainActivity() {
 
-            startMainActivity();
-        }
+        new Handler().postDelayed(() -> {
+            Intent intent = new Intent(SplashScreenActivity.this, MainActivity.class);
+            SplashScreenActivity.this.startActivity(intent);
+            SplashScreenActivity.this.finish();
+        }, 500);
 
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-        }
     }
 
 }
