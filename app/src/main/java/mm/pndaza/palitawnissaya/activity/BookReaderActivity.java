@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
@@ -30,10 +31,12 @@ public class BookReaderActivity extends AppCompatActivity {
     private boolean actionVisibleState = true;
     private ScrollMode scrollMode;
     private boolean nightMode;
-    SharePref sharePref;
+    private SharePref sharePref;
+    private int currentPage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_book_reader);
 
@@ -49,47 +52,42 @@ public class BookReaderActivity extends AppCompatActivity {
 
         String pdfFileName = nsyid + ".pdf";
         assetName = "books" + File.separator + pdfFileName;
+        currentPage = nsypage - 1;
+        if (savedInstanceState != null) {
+            currentPage = savedInstanceState.getInt("currentPage", 0);
+        }
         pdfView = findViewById(R.id.pdfView);
 
-        sharePref =  SharePref.getInstance(this);
+        sharePref = SharePref.getInstance(this);
         scrollMode = sharePref.getScrollMode();
         nightMode = sharePref.getNightMode();
 
-        pdfView.fromAsset("books" + File.separator + pdfFileName)
-                .enableSwipe(true) // allows to block changing pages using swipe
-                .swipeHorizontal(scrollMode == ScrollMode.horizontal)
-                .pageSnap(scrollMode == ScrollMode.horizontal)
-                .defaultPage(nsypage - 1)
-                .scrollHandle(new DefaultScrollHandle(this))
-                .pageFitPolicy(FitPolicy.WIDTH)
-                .nightMode(nightMode)
-                .load();
+        loadPdf();
 
 
         pdfView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(actionVisibleState) {
-                    getSupportActionBar().hide();
-                    actionVisibleState = false;
-                } else {
+                actionVisibleState = !actionVisibleState;
+                if (actionVisibleState) {
                     getSupportActionBar().show();
-                    actionVisibleState = true;
+                } else {
+                    getSupportActionBar().hide();
                 }
             }
         });
     }
 
-//    @Override
-//    protected void onNightModeChanged(int mode) {
-//        SharePref sharePref = SharePref.getInstance(this);
-//        if (sharePref.getNightMode()) {
-//            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-//        } else {
-//            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-//        }
-//        super.onNightModeChanged(mode);
-//    }
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        // Save UI state changes to the savedInstanceState.
+        // This bundle will be passed to onCreate if the process is
+        // killed and restarted.
+
+        savedInstanceState.putInt("currentPage", currentPage);
+        // etc.
+    }
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -120,8 +118,9 @@ public class BookReaderActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-    private void swapIcon(MenuItem item){
-        if( scrollMode == ScrollMode.vertical) {
+
+    private void swapIcon(MenuItem item) {
+        if (scrollMode == ScrollMode.vertical) {
             item.setIcon(getResources().getDrawable(R.drawable.ic_baseline_swap_horiz_24));
         } else {
             item.setIcon(getResources().getDrawable(R.drawable.ic_baseline_swap_vert_24));
@@ -129,65 +128,47 @@ public class BookReaderActivity extends AppCompatActivity {
 
     }
 
-//    private void swapNightModeIcon(MenuItem item){
-//
-//        if( !nightMode) {
-//            item.getIcon().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP);
-//
-//        } else {
-//            item.getIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-//        }
-//
-//    }
-
-    private  void changeNightMode(MenuItem item){
-        if(nightMode){
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            item.getIcon().setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-            pdfView.setNightMode(false);
-            pdfView.loadPages();
-            nightMode = false;
-            sharePref.setNightMode(false);
-        } else {
+    private void changeNightMode(MenuItem item) {
+        currentPage = pdfView.getCurrentPage();
+        nightMode = !nightMode;
+        sharePref.setNightMode(nightMode);
+        if (nightMode) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            item.getIcon().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_ATOP);
-            pdfView.setNightMode(true);
-            pdfView.loadPages();
-            nightMode = true;
-            sharePref.setNightMode(true);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
+
+        // changing night mode will load onCreate method again
+        // doesn't need to load pdf
+        // current page will be save in onSaveInstanceState method
     }
 
-    private void changePageMode(){
+    private void changePageMode() {
 
-        int currentPage = pdfView.getCurrentPage();
-        if( scrollMode == ScrollMode.vertical) {
-            pdfView.fromAsset(assetName)
-                    .enableSwipe(true) // allows to block changing pages using swipe
-                    .swipeHorizontal(true)
-                    .pageSnap(true)
-                    .autoSpacing(true)
-                    .pageFling(true)
-                    .pageFitPolicy(FitPolicy.BOTH)
-                    .defaultPage(currentPage)
-                    .scrollHandle(new DefaultScrollHandle(this))
-                    .nightMode(nightMode)
-                    .load();
+        currentPage = pdfView.getCurrentPage();
+        if (scrollMode == ScrollMode.vertical) {
             scrollMode = ScrollMode.horizontal;
-            sharePref.setScrollMode(scrollMode);
         } else {
-            pdfView.fromAsset(assetName)
-                    .enableSwipe(true)
-                    .swipeHorizontal(false)
-                    .defaultPage(currentPage)
-                    .scrollHandle(new DefaultScrollHandle(this))
-                    .pageFitPolicy(FitPolicy.WIDTH)
-                    .nightMode(nightMode)
-                    .load();
             scrollMode = ScrollMode.vertical;
-            sharePref.setScrollMode(scrollMode);
         }
+        sharePref.setScrollMode(scrollMode);
 
+        loadPdf();
+
+    }
+
+    private void loadPdf() {
+        pdfView.fromAsset(assetName)
+                .defaultPage(currentPage)
+                .enableSwipe(true)
+                .pageFitPolicy(scrollMode == ScrollMode.horizontal ? FitPolicy.BOTH : FitPolicy.WIDTH)
+                .swipeHorizontal(scrollMode == ScrollMode.horizontal)
+                .pageSnap(scrollMode == ScrollMode.horizontal)
+                .autoSpacing(true)// allows to block changing pages using swipe
+                .pageFling(scrollMode == ScrollMode.horizontal)
+                .scrollHandle(new DefaultScrollHandle(this))
+                .nightMode(nightMode)
+                .load();
     }
 
 }
